@@ -9,6 +9,7 @@ import * as Rend from "./renderer.js";
 import * as Utils from "./utils.js";
 
 window.onload = () => {
+    console.log("window loading");
     let canvas = document.getElementById('my-canvas'); //load the canvas
     
     init(canvas); //load our init
@@ -156,7 +157,7 @@ function parse(data) {
 
                 let entity = Utils.construct(key, x, y);
 
-                board.add(entity.xIndex, entity.yIndex, entity);
+                board.add(entity);
             }
         }
     });

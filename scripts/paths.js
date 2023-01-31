@@ -1,110 +1,6 @@
-import * as Utils from "./utils.js";
-import * as Main from "./pip.js";
+import * as Main from "./main.js";
 
 export class PathFinder {
-    constructor(start, end) {
-        this.start = start;
-        this.end = end;
-        this.method = "a-star";
-
-        this.tilemap = Main.board;
-        this.start.cost = 0;
-        this.frontier = [[this.start]];
-        this.explored = [this.start];
-    }
-
-    isExplored(node) {
-        let res = this.explored.findIndex(
-            function(n) {
-                return n.x === node.x && n.y === node.y;
-            }
-        ) != -1;
-
-        return res;
-    }
-
-    isImpassable(node) {
-        let e = this.tilemap.affirm(node.x, node.y);
-
-        return !e.isCollidable();
-    }
-
-    expand(node) {
-        var actions = [];
-
-        for(var x = -1; x < 2; x++) {
-            for(var y = -1; y < 2; y++){
-                var newNode = {
-                    x: node.x - x,
-                    y: node.y - y
-                }
-
-                if((x != 0 || y != 0) && !this.isExplored(newNode) && !this.isImpassable(newNode)) {
-                    let e = this.tilemap.affirm(node.x, node.y);
-                    // Add the path distance to reach this node
-                    var movement = e.isCollidable() ? 1 : -1;
-                    newNode.cost = movement + node.cost;
-        
-                    // Add the estimated distance to the goal
-                    // We'll use straight-line distance
-                    newNode.distance = Math.sqrt(
-                    Math.pow(newNode.x - this.end.x, 2) +
-                    Math.pow(newNode.y - this.end.y, 2)
-                    );
-
-                    // push the new node to action and explored lists
-                    actions.push(newNode);
-                    this.explored.push(newNode);
-                }
-            }
-        }
-
-        return actions;
-    }
-
-    find() {
-        while(true) {
-            // If there is no paths left in the frontier,
-            // we cannot reach our goal
-            if(this.frontier.length == 0) {
-                return [];
-            }
-        
-            // Select a path from the frontier to explore
-            // The method of selection is very important
-
-            // this.frontier.sort(function(pathA, pathB){
-            //     var a = pathA[pathA.length-1].cost + pathA[pathA.length-1].distance;
-            //     var b = pathB[pathB.length-1].cost + pathB[pathB.length-1].distance;
-            //     return a - b;
-            // });
-
-            var path = this.frontier.shift();
-      
-            // If the path we chose leads to the goal,
-            // we found a solution; return it.
-            var lastNode = path[path.length-1];
-
-            if(lastNode.x == this.end.x && lastNode.y == this.end.y) {
-                return path;
-            }
-        
-            // Otherwise, add any new nodes not already explored
-            // to the frontier
-            let expansions = this.expand(lastNode, lastNode);
-
-            for(let i = 0; i < expansions.length; i++) {
-                let n = expansions[i];
-
-                var newPath = path.slice();
-                newPath.push(n);
-                this.frontier.push(newPath);
-            }
-        }
-    }
-}
-
-export class PathFinder2 {
     constructor(start, end) {
         this.start = start;
         this.end = end;
@@ -176,7 +72,11 @@ export class PathFinder2 {
 
         this.addOpen(new Step(this.start.x, this.start.y, this.end.x, this.end.y, this.step, false));
 
-        while(this.open.length !== 0) {
+        while(true) {
+            if(this.open.length === 0) {
+                return false;
+            }
+
             current = this.getBestOpen();
             if(current && current.x === this.end.x && current.y === this.end.y) {
                 return this.buildPath(current, []);
@@ -190,7 +90,7 @@ export class PathFinder2 {
             for (i = 0; i < neighbours.length; i++) {
                 let n = neighbours[i];
 
-                neighbours[i] = new Tile(n.xIndex, n.yIndex);
+                neighbours[i] = new Tile(n.x, n.y);
             }
 
             for (i = 0; i < neighbours.length; i++) {

@@ -1,5 +1,5 @@
 import * as Entities from "./entities.js";
-import * as Main from "./pip.js";
+import * as Main from "./main.js";
 
 export var debugMode;
 

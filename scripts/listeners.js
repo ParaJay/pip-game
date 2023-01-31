@@ -1,4 +1,4 @@
-import * as Main from "./pip.js";
+import * as Main from "./main.js";
 import * as Utils from "./utils.js";
 import * as Entities from "./entities.js";
 
@@ -6,7 +6,7 @@ export var mouseDisabled = false;
 export var mouseDown = false;
 export var mouse;
 
-export function onMouseClick(e) {
+export function onMouseClick(e) {   
     if(mouseDisabled) {
         return;
     }
@@ -18,27 +18,24 @@ export function onMouseClick(e) {
     }
 
     let renderer = Main.renderer;
-    let usize = renderer.usize;
     let board = Main.board;
- 
-    let xIndex = Math.floor((e.pageX - renderer.canvas.offsetLeft) / usize);
-    let yIndex = Math.floor((e.pageY - renderer.canvas.offsetTop) / usize);
+    let usize = renderer.usize;
 
-    var x = xIndex * usize;
-    var y = yIndex * usize;
+    let x = Math.floor((e.pageX - renderer.canvas.offsetLeft) / usize);
+    let y = Math.floor((e.pageY - renderer.canvas.offsetTop) / usize);
 
-    if(xIndex > 19 || yIndex > 19) {
+    if(x > 19 || y > 19) {
         return;
     }
 
     var entity = Utils.construct(Main.selectedEntity, x, y);
     
-    if(!board.isSpaceEmpty(xIndex, yIndex) && Utils.matchType(entity, board.get(xIndex, yIndex))) {
+    if(!board.isSpaceEmpty(x, y) && Utils.matchType(entity, board.get(x, y))) {
         if(entity.isReplaceable()) {
-            board.remove(xIndex, yIndex);
+            board.remove(x, y);
         }
     } else {
-        board.add(xIndex, yIndex, entity);
+        board.put(x, y, entity);
     }
 
     renderer.render();
@@ -52,8 +49,8 @@ export function onMouseDrag(e) {
     let usize = Main.renderer.usize;
     let board = Main.board;
     let canvas = Main.renderer.canvas;
-    let x = e.pageX - canvas.offsetLeft;
-    let y = e.pageY - canvas.offsetTop;
+    let x = Math.floor((e.pageX - canvas.offsetLeft) / usize);
+    let y = Math.floor((e.pageY - canvas.offsetTop) / usize);
 
     mouse = new Entities.Entity(x, y);
 
@@ -61,10 +58,7 @@ export function onMouseDrag(e) {
         return;
     }
 
-    let xIndex = Math.floor((x) / usize);
-    let yIndex = Math.floor((y) / usize);
-
-    let entity = board.get(xIndex, yIndex);
+    let entity = board.get(x, y);
 
     if(entity !== Main.hoveredEntity) {
         Main.setHoveredEntity(entity);
@@ -76,20 +70,20 @@ export function onMouseDrag(e) {
         return;
     }
 
-    if(xIndex > 19 || yIndex > 19) {
+    if(x > 19 || y > 19) {
         return;
     }
 
     if(e.shiftKey || e.ctrlKey) {
         if(!Utils.isNull(entity) && entity.isReplaceable()) {
-            Main.board.remove(xIndex, yIndex);
+            Main.board.remove(x, y);
 
             Main.renderer.render();
         }
     } else {
-        let entity = Utils.construct(Main.selectedEntity, xIndex * usize, yIndex * usize);
+        let entity = Utils.construct(Main.selectedEntity, x, y);
 
-        board.add(xIndex, yIndex, entity);
+        board.add(entity);
 
         Main.renderer.render();
     }

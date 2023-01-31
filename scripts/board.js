@@ -1,10 +1,9 @@
 import * as Utils from "./utils.js";
-import * as Main from "./pip.js";
+import * as Main from "./main.js";
 import * as Entities from "./entities.js";
 import * as Events from "./events.js";
 import * as Listeners from "./listeners.js";
-import { Blank } from "./entities.js";
-import { PathFinder, PathFinder2 } from "./paths.js";
+import { PathFinder } from "./paths.js";
 
 export class Board {
     #board;
@@ -25,7 +24,11 @@ export class Board {
         }
     }
 
-    add(x, y, entity) {
+    add(entity) {
+        this.put(entity.x, entity.y, entity);
+    }
+
+    put(x, y, entity) {
         let old = this.#board[x][y];
 
         this.#board[x][y] = entity;
@@ -34,7 +37,7 @@ export class Board {
     }
 
     remove(x, y) {
-        this.add(x, y, null);
+        this.put(x, y, null);
     }
     
     get(x, y) {
@@ -117,13 +120,17 @@ export class Board {
     }
 
     createPathTo(from, to) {
-        let start = { x: from.xIndex, y: from.yIndex }
+        let start = { x: from.x, y: from.y }
 
-        let end = { x: to.xIndex, y: to.yIndex }
+        let end = { x: to.x, y: to.y }
 
-        let pathfinder = new PathFinder2(start, end);
+        let pathfinder = new PathFinder(start, end);
 
         let paths = pathfinder.find();
+
+        if(paths === false) {
+            return false;
+        }
 
         var steps = [];
 
@@ -156,8 +163,8 @@ export class Board {
         let xDist = this.getXDistance(to, from);
         let yDist = this.getYDistance(to, from);
 
-        let nx = this.getNormalizedXDistance(from, to) / usize;
-        let ny = this.getNormalizedYDistance(from, to) / usize;
+        let nx = this.getNormalizedXDistance(from, to);
+        let ny = this.getNormalizedYDistance(from, to);
 
         let path = [];
 
@@ -173,11 +180,10 @@ export class Board {
     }
 
     affirm(x, y) {
-        let usize = Main.renderer.usize;
         let entity = this.get(x, y);
 
         if(Utils.isNull(entity)) {
-            return new Entities.Blank(x * usize, y * usize);
+            return new Entities.Blank(x, y);
         } else {
             return entity;
         }
@@ -191,19 +197,19 @@ export class Board {
         let c = this.affirm(x, y + 1);
         let d = this.affirm(x, y - 1);
 
-        if(a.isCollidable()) {
+        if(x != 19 && a.isCollidable()) {
             neighbours.push(a);
         }
 
-        if(b.isCollidable()) {
+        if(x != 0 && b.isCollidable()) {
             neighbours.push(b);
         }
 
-        if(c.isCollidable()) {
+        if(y != 19 && c.isCollidable()) {
             neighbours.push(c);
         }
 
-        if(d.isCollidable()) {
+        if(y != 0 && d.isCollidable()) {
             neighbours.push(d);
         }
 

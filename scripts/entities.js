@@ -1,60 +1,23 @@
 import * as Utils from "./utils.js";
 import * as Rend from "./renderer.js";
-import * as Main from "./pip.js";
-
-// export class Rectangle { 
-//     constructor(x, y, width = Rend.renderer.usize, height = width, colour) {
-//         this.x = x;
-//         this.y = y;
-//         this.width = width;
-//         this.height = height;
-//         this.colour = colour;
-//     }
-
-//     setColour(colour) {
-//         this.colour = colour;
-//     }
-
-//     render() {
-//         let context = Rend.renderer.getContext();
-
-//         context.beginPath();
-//         context.fillStyle = this.colour;
-//         context.strokeStyle = "black";
-//         context.rect(this.x, this.y, this.width, this.height);
-//         context.fill();
-//         context.stroke();
-//     }
-
-//     intersects(rectangle) {
-//         if(rectangle === null || rectangle === undefined || !(rectangle instanceof Rectangle)) {
-//             return false;
-//         }
-
-//         if(this != rectangle) {
-//             return this.x == rectangle.x && this.y == rectangle.y;
-//         }
-
-//         return false;
-//     }
-// }
+import * as Main from "./main.js";
 
 export class Entity {
     constructor(x, y, colour) {
         let usize = Rend.renderer.usize;
         this.x = x;
         this.y = y;
+        this.xPos = this.x * usize;
+        this.yPos = this.y * usize;
         this.width = usize;
         this.height = usize;
-
-        // super(x, y, usize, usize, colour);
 
         if(x > 19 || y > 19) {
             Utils.debug(this.getName() + " init with pos: " + x + ", " + y);
         }
 
-        this.xIndex = x / usize;
-        this.yIndex = y / usize;
+        // this.xIndex = x;
+        // this.yIndex = y;
         this.colour = colour;
     }
 
@@ -64,9 +27,22 @@ export class Entity {
         context.beginPath();
         context.fillStyle = this.colour;
         context.strokeStyle = "black";
-        context.rect(this.x, this.y, this.width, this.height);
+        context.rect(this.xPos, this.yPos, this.width, this.height);
         context.fill();
         context.stroke();
+    }
+
+    reaffirmPos() {
+        this.xPos = this.x * this.width;
+        this.yPos = this.y * this.height;
+    }
+
+    getXPos() {
+        return this.xPos;
+    }
+
+    getYPos() {
+        return this.yPos;
     }
 
     isReplaceable() {
@@ -109,7 +85,7 @@ export class Food extends Entity {
 
     interact() {
         let pip = Main.pip;
-        Main.board.remove(this.xIndex, this.yIndex);
+        Main.board.remove(this.x, this.y);
 
         pip.hunger += 20;
 
@@ -237,7 +213,7 @@ export class Goal extends Entity {
 
     interact() {
         let pip = Main.pip;
-        Main.board.remove(this.xIndex, this.yIndex);
+        Main.board.remove(this.x, this.y);
         pip.goal = null;
         console.log("reached a goal");
         Main.updatePip(pip);
@@ -258,9 +234,8 @@ export class Pip extends Entity {
     #speed; #eyeSize; #w3; #w3d; #w3me; #wmed;
 
     constructor() {
-        let usize = Rend.renderer.usize;
-        let x = Utils.randint(0, 19) * usize;
-        let y = Utils.randint(0, 19) * usize;
+        let x = Utils.randint(0, 19);
+        let y = Utils.randint(0, 19);
 
         super(x, y, "lime");
 
@@ -335,7 +310,7 @@ export class Pip extends Entity {
             this.hungerThreshold = Utils.randint(1, 40) + 60;
             set = true;
         } else if(!Utils.isNull(goal)) {
-            // console.log(goal.equals(this.target));
+            
             if(!goal.equals(this.target)) {
                 this.target = goal;
                 set = true;
@@ -345,7 +320,13 @@ export class Pip extends Entity {
         }
 
         if(!Utils.isNull(this.target) && (set || this.rerouteflag)) {
-            this.setPath(board.createPathTo(this, this.target));
+            let path = board.createPathTo(this, this.target);
+
+            if(path) {
+                this.setPath(board.createPathTo(this, this.target));
+            } else {
+                this.target = null;
+            }
         }
     }
 
@@ -381,7 +362,7 @@ export class Pip extends Entity {
             let g = board.getTypeNearestTo("Goal", this);
             // let gDist = board.getDistance(g, this.target);
 
-            if(this.target == null || board.isSpaceEmpty(this.target.xIndex, this.target.yIndex)) {
+            if(this.target == null || board.isSpaceEmpty(this.target.x, this.target.y)) {
                 this.#pickTarget();
                 // console.log("setting goal: " + this.goal.x, this.goal.y);
             }
@@ -411,56 +392,18 @@ export class Pip extends Entity {
                 }
             }
 
-            // Utils.debug(path);
-
             this.direction = pathStep;
             this.step++;
-            
-            // let xDist = board.getNormalizedXDistance(this, this.target) / usize;
-            // let yDist = board.getNormalizedYDistance(this, this.target) / usize;
 
-            // let doX = false;
-
-            // // console.log(xDist, yDist);
-
-            // if(yDist > xDist) {
-            //     doX = (xDist != 0);
-            // } else if(yDist == xDist) {
-            //     doX = (xDist != 0) && Utils.randint(0, 100) < 50;
-            // } else {
-            //     doX = (yDist == 0);
-            // }
-
-            // if(doX) {
-            //     if(this.target.x > this.x) {
-            //         xMove = 1;
-            //         this.direction = "right";
-            //     } else {
-            //         xMove = -1;
-            //         this.direction = "left";
-            //     }
-            // } else {
-            //     if(this.target.y > this.y) {
-            //         yMove = 1;
-            //         this.direction = "down";
-            //     } else {
-            //         yMove = -1;
-            //         this.direction = "up";
-            //     }
-            // }
-
-            this.#tryMove(xMove * usize, yMove * usize);
+            this.#tryMove(xMove, yMove);
         }
     }
 
     #setXY(x, y) {
-        let usize = Main.renderer.usize;
-
         this.x = x; 
         this.y = y;
 
-        this.xIndex = this.x / usize;
-        this.yIndex = this.y / usize;
+        this.reaffirmPos();
     }
 
     #addXY(x, y) {
@@ -474,9 +417,9 @@ export class Pip extends Entity {
         
         this.#addXY(xchange, ychange);
 
-        let reset = this.x < 0 || this.x >= renderer.width || this.y < 0 || this.y >= renderer.height;
+        let reset = this.x < 0 || this.x >= board.width || this.y < 0 || this.y >= board.height;
 
-        let entity = board.get(this.xIndex, this.yIndex);
+        let entity = board.get(this.x, this.y);
 
         if(!Utils.isNull(entity)) {
             if(entity.isCollidable()) {
@@ -551,10 +494,8 @@ export class Pip extends Entity {
     }
 
     #randomMove() {
-        let usize = Main.renderer.usize;
-
-        let xchange = this.direction == "left" ? -usize : this.direction == "right" ? usize : 0;
-        let ychange = this.direction == "up" ? -usize : this.direction == "down" ? usize : 0;
+        let xchange = this.direction == "left" ? -1 : this.direction == "right" ? 1 : 0;
+        let ychange = this.direction == "up" ? -1 : this.direction == "down" ? 1 : 0;
 
         this.#tryMove(xchange, ychange);
 
@@ -562,7 +503,7 @@ export class Pip extends Entity {
     }
 
     #doSleep() {
-        let entity = Main.board.get(this.xIndex, this.yIndex);
+        let entity = Main.board.get(this.x, this.y);
         let bed = false;
 
         if(!Utils.isNull(entity) && entity instanceof Bed) {
@@ -600,17 +541,17 @@ export class Pip extends Entity {
         let x, x2, y, y2;
 
         let vv = {
-            "up" : this.y + this.#eyeSize,
-            "down": this.y + this.#wmed,
-            "left": this.x + this.#eyeSize,
-            "right": this.x + this.#wmed
+            "up" : this.yPos + this.#eyeSize,
+            "down": this.yPos + this.#wmed,
+            "left": this.xPos + this.#eyeSize,
+            "right": this.xPos + this.#wmed
         };
 
         switch(this.direction) {
             case("up"):
             case("down"): {
-                x = this.x + this.#w3me;
-                x2 = this.x + this.#w3d;
+                x = this.xPos + this.#w3me;
+                x2 = this.xPos + this.#w3d;
                 y = vv[this.direction];
                 break;
             }
@@ -618,8 +559,8 @@ export class Pip extends Entity {
             case("left"):
             case("right"): {
                 x = vv[this.direction];
-                y = this.y + this.#w3me;
-                y2 = this.y + this.#w3d;
+                y = this.yPos + this.#w3me;
+                y2 = this.yPos + this.#w3d;
                 break;
             }
         }
@@ -639,10 +580,8 @@ export class Pip extends Entity {
             context.strokeStyle = "black";
             context.beginPath();
 
-            // Utils.debug(this.path);
-
-            var lastX = this.x + (usize / 2);
-            var lastY = this.y + (usize / 2);
+            var lastX = this.xPos + (usize / 2);
+            var lastY = this.yPos + (usize / 2);
 
             for(let i = 0; i < this.path.length; i++) {
                 context.moveTo(lastX, lastY);
@@ -663,33 +602,6 @@ export class Pip extends Entity {
 
                 context.stroke();
             }
-            // Utils.debug("not null");
-            // let xDist = board.getXDistance(this, this.target);
-            // let yDist = board.getYDistance(this, this.target);
-
-            // Utils.debug(xDist,yDist);
-
-            // let x1 = xDist < 0 ? this.x + xDist : this.x;
-            // let x2 = xDist < 0 ? this.x : this.x + xDist;
-
-            // Utils.debug("got dist");
-
-            // context.beginPath();
-            // if(this.direction == "left" || this.direction == "right") {
-            //     context.moveTo(this.x + (usize / 2), this.y + (usize / 2));
-            //     context.lineTo(this.x - xDist + (usize / 2), this.y + (usize / 2));
-            //     context.moveTo(this.x - xDist + (usize / 2), this.y + (usize / 2));
-            //     context.lineTo(this.x - xDist + (usize / 2), this.y - yDist);
-            // } else {
-            //     context.moveTo(this.x + (usize / 2), this.y + (usize / 2));
-            //     context.lineTo(this.x + (usize / 2), this.y - yDist);
-            //     context.moveTo(this.x + (usize / 2), this.y + (usize / 2));
-            //     context.lineTo(this.x - xDist + (usize / 2), this.y + (usize / 2));
-            // }
-            // // context.drawLine(this.x + xDist, this.y, this.x + xDist, this.y + yDist)
-            // context.stroke();
-
-            // Utils.debug("e");
         }
     }
 
