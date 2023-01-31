@@ -21,3 +21,5 @@ planned changes
 > allow pip to continuously seek food until reaching food threshold
 <br><br>
 > display food threshold on right side along with targets
+<br><br>
+> check all available goals and target the reachables
