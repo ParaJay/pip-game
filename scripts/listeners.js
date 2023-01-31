@@ -83,7 +83,7 @@ export function onMouseDrag(e) {
     } else {
         let entity = Utils.construct(Main.selectedEntity, x, y);
 
-        board.add(entity);
+        board.put(x, y, entity);
 
         Main.renderer.render();
     }
