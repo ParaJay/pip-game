@@ -14,12 +14,12 @@ path finding done with a* algorithm
 
 last commit changes
 > Entities are now initialized with their board indexes (0 - 19)
-<br><br>
+
 > position in regards to canvas are now xPos and yPos respectively
 
 planned changes
 > allow pip to continuously seek food until reaching food threshold
-<br><br>
+
 > display food threshold on right side along with targets
-<br><br>
+
 > check all available goals and target the reachables
